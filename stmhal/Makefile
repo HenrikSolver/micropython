@@ -21,7 +21,7 @@ include ../py/py.mk
 CMSIS_DIR=cmsis
 HAL_DIR=hal
 USBDEV_DIR=usbdev
-#USBHOST_DIR=usbhost
+USBHOST_DIR=usbhost
 FATFS_DIR=lib/fatfs
 DFU=../tools/dfu.py
 # may need to prefix dfu-util with sudo
@@ -39,7 +39,7 @@ INC += -I$(CMSIS_DIR)/inc
 INC += -I$(CMSIS_DIR)/devinc
 INC += -I$(HAL_DIR)/inc
 INC += -I$(USBDEV_DIR)/core/inc -I$(USBDEV_DIR)/class/inc
-#INC += -I$(USBHOST_DIR)
+INC += -I$(USBHOST_DIR)/Core/Inc -I$(USBHOST_DIR)/Class/CDC/Inc -I$(USBHOST_DIR)/Class/HID/Inc
 INC += -I../lib/mp-readline
 INC += -I../lib/netutils
 INC += -I../lib/timeutils
@@ -106,6 +106,7 @@ SRC_C = \
 	usbd_desc.c \
 	usbd_cdc_interface.c \
 	usbd_msc_storage.c \
+	usbh_conf.c \
 	mphal.c \
 	irq.c \
 	pendsv.c \
@@ -198,6 +199,13 @@ SRC_USBDEV = $(addprefix $(USBDEV_DIR)/,\
 	class/src/usbd_msc_data.c \
 	)
 
+SRC_USBHOST = $(addprefix $(USBHOST_DIR)/,\
+	Core/Src/usbh_core.c \
+	Core/Src/usbh_ctlreq.c \
+	Core/Src/usbh_ioreq.c \
+	Core/Src/usbh_pipes.c \
+	)
+
 ifeq ($(MICROPY_PY_WIZNET5K),1)
 WIZNET5K_DIR=drivers/wiznet5k
 INC += -I$(TOP)/$(WIZNET5K_DIR)
@@ -241,6 +249,7 @@ OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_S:.s=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_HAL:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_USBDEV:.c=.o))
+OBJ += $(addprefix $(BUILD)/, $(SRC_USBHOST:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_MOD:.c=.o))
 OBJ += $(BUILD)/pins_$(BOARD).o
 

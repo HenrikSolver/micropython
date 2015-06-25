@@ -219,7 +219,7 @@ static inline mp_uint_t disable_irq(void) {
 #define realloc gc_realloc
 
 #define USE_DEVICE_MODE
-//#define USE_HOST_MODE
+#define USE_HOST_MODE
 
 // board specific definitions
 #include "mpconfigboard.h"

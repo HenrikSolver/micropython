@@ -34,6 +34,8 @@
 #include "usbd_cdc_interface.h"
 #include "usbd_msc_storage.h"
 
+#include "usbh_def.h"
+
 #include "py/objstr.h"
 #include "py/runtime.h"
 #include "py/stream.h"
@@ -47,6 +49,10 @@ mp_uint_t pyb_usb_flags = 0;
 #ifdef USE_DEVICE_MODE
 USBD_HandleTypeDef hUSBDDevice;
 pyb_usb_storage_medium_t pyb_usb_storage_medium = PYB_USB_STORAGE_MEDIUM_NONE;
+#endif
+
+#ifdef USE_HOST_MODE
+USBH_HandleTypeDef USB_OTG_Core;
 #endif
 
 // predefined hid mouse data
@@ -591,59 +597,93 @@ const mp_obj_type_t pyb_usb_hid_type = {
 #include "led.h"
 #include "usbh_core.h"
 #include "usbh_usr.h"
-#include "usbh_hid_core.h"
+#include "usbh_hid.h"
 #include "usbh_hid_keybd.h"
 #include "usbh_hid_mouse.h"
 
-__ALIGN_BEGIN USBH_HOST USB_Host __ALIGN_END ;
+__ALIGN_BEGIN USBH_HandleTypeDef USB_Host __ALIGN_END ;
 
 static int host_is_enabled = 0;
+
+void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
+{
+  switch(id)
+  {
+       /* end of device basic enumeration */
+  case HOST_USER_SELECT_CONFIGURATION:
+    break;
+
+       /* a matched class driver is picked up from the class list (TPL) */
+  case HOST_USER_CLASS_SELECTED:
+    break;
+
+       /* class-specific initialization finishes */
+  case HOST_USER_CLASS_ACTIVE:
+//    Appli_state = APPLICATION_START;
+    break;
+
+       /* USB Host connexion event */
+  case HOST_USER_CONNECTION:
+    break;
+
+       /* USB Host disconnexion event */
+  case HOST_USER_DISCONNECTION:
+ //   Appli_state = APPLICATION_IDLE;
+ //   BSP_LED_Off(LED4);
+ //   BSP_LED_Off(LED5);
+ //   f_mount(NULL, (TCHAR const*)"", 0);
+    break;
+
+  default:
+    break;
+  }
+}
 
 void pyb_usb_host_init(void) {
     if (!host_is_enabled) {
         // only init USBH once in the device's power-lifetime
         /* Init Host Library */
-        USBH_Init(&USB_OTG_Core, USB_OTG_FS_CORE_ID, &USB_Host, &HID_cb, &USR_Callbacks);
+        USBH_Init(&USB_OTG_Core, &USBH_UserProcess, 0);
     }
     host_is_enabled = 1;
 }
 
 void pyb_usb_host_process(void) {
-    USBH_Process(&USB_OTG_Core, &USB_Host);
+    USBH_Process(&USB_OTG_Core);
 }
 
 uint8_t usb_keyboard_key = 0;
 
-// TODO this is an ugly hack to get key presses
-uint pyb_usb_host_get_keyboard(void) {
-    uint key = usb_keyboard_key;
-    usb_keyboard_key = 0;
-    return key;
-}
-
-void USR_MOUSE_Init(void) {
-    led_state(4, 1);
-    USB_OTG_BSP_mDelay(100);
-    led_state(4, 0);
-}
-
-void USR_MOUSE_ProcessData(HID_MOUSE_Data_TypeDef *data) {
-    led_state(4, 1);
-    USB_OTG_BSP_mDelay(50);
-    led_state(4, 0);
-}
-
-void USR_KEYBRD_Init(void) {
-    led_state(4, 1);
-    USB_OTG_BSP_mDelay(100);
-    led_state(4, 0);
-}
-
-void USR_KEYBRD_ProcessData(uint8_t pbuf) {
-    led_state(4, 1);
-    USB_OTG_BSP_mDelay(50);
-    led_state(4, 0);
-    usb_keyboard_key = pbuf;
-}
+// // TODO this is an ugly hack to get key presses
+// uint pyb_usb_host_get_keyboard(void) {
+//     uint key = usb_keyboard_key;
+//     usb_keyboard_key = 0;
+//     return key;
+// }
+//
+// void USR_MOUSE_Init(void) {
+//     led_state(4, 1);
+//     USB_OTG_BSP_mDelay(100);
+//     led_state(4, 0);
+// }
+//
+// void USR_MOUSE_ProcessData(HID_MOUSE_Data_TypeDef *data) {
+//     led_state(4, 1);
+//     USB_OTG_BSP_mDelay(50);
+//     led_state(4, 0);
+// }
+//
+// void USR_KEYBRD_Init(void) {
+//     led_state(4, 1);
+//     USB_OTG_BSP_mDelay(100);
+//     led_state(4, 0);
+// }
+//
+// void USR_KEYBRD_ProcessData(uint8_t pbuf) {
+//     led_state(4, 1);
+//     USB_OTG_BSP_mDelay(50);
+//     led_state(4, 0);
+//     usb_keyboard_key = pbuf;
+// }
 
 #endif // USE_HOST_MODE
